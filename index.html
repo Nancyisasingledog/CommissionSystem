@@ -114,6 +114,30 @@
             align-items: center;
         }
 
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3); /* 淺色圓環 */
+            border-top: 4px solid var(--main-blue);     /* 頂部深色，形成旋轉感 */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;        /* 1秒轉一圈，無限循環 */
+            margin: 10px auto;                         /* 居中 */
+        }
+
+        /* 定義旋轉動作 */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 讓等待文字跟圖示排在一起 */
+        .loading-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
         .status-tag {
             display: inline-block;
             padding: 4px 14px;
@@ -244,4 +268,5 @@
         }
     </script>
 </body>
+
 </html>
