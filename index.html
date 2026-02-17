@@ -42,7 +42,7 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             width: 85%;
-            max-width: 320px; /* 縮小寬度，讓卡片更精緻 */
+            max-width: 320px;
             text-align: center;
         }
 
@@ -103,7 +103,7 @@
             transform: translateY(-2px);
         }
 
-        /* === 4. 結果顯示區 (關鍵修復) === */
+        /* === 4. 結果顯示與 Loading 動畫 === */
         #result {
             display: none; 
             opacity: 0;
@@ -114,23 +114,22 @@
             align-items: center;
         }
 
+        /* 旋轉圖示本體 */
         .loader {
-            border: 4px solid rgba(255, 255, 255, 0.3); /* 淺色圓環 */
-            border-top: 4px solid var(--main-blue);     /* 頂部深色，形成旋轉感 */
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid var(--main-blue);
             border-radius: 50%;
             width: 30px;
             height: 30px;
-            animation: spin 1s linear infinite;        /* 1秒轉一圈，無限循環 */
-            margin: 10px auto;                         /* 居中 */
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
         }
 
-        /* 定義旋轉動作 */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        /* 讓等待文字跟圖示排在一起 */
         .loading-box {
             display: flex;
             flex-direction: column;
@@ -149,7 +148,7 @@
         }
 
         .progress-container {
-            width: 100%;             /* 填滿父容器 */
+            width: 100%;
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             height: 12px;
@@ -160,7 +159,7 @@
 
         .progress-bar {
             height: 100%;
-            width: 0%;               /* 由 JS 動態控制 */
+            width: 0%;
             background: linear-gradient(90deg, #A2C2D6, var(--main-blue));
             transition: width 1s ease-in-out;
             border-radius: 10px;
@@ -181,35 +180,29 @@
     </div>
 
     <script>
-        /**
-         * 核心查詢函式
-         */
         async function queryStatus() {
             const idInput = document.getElementById('questId').value.trim();
             const resultDiv = document.getElementById('result');
             
-            // 替換成你的 GAS 部署網址
             const gasUrl = "https://script.google.com/macros/s/AKfycbyWZ2_SgLohiRTZSeOgW98GvTFUEEYZMbkUY_c5ZJWVO9zPNBCEcNERMaScL5P3I6K9/exec"; 
             const apiUrl = `${gasUrl}?id=${idInput}`;
 
-            // 1. 重設顯示狀態 (每次點擊都會先隱藏再顯示動畫)
             resultDiv.style.display = "flex";
             resultDiv.style.opacity = "0";
 
-            // 2. 攔截空值
             if (!idInput) {
-                showFeedback(resultDiv, "請輸入編號再查詢！");
+                showFeedback(resultDiv, "⚠️ 請輸入編號再查詢！", false);
                 return;
             }
 
-            showFeedback(resultDiv, "正在搜尋資料...");
+            // 開始搜尋，顯示 Loading 動畫 (傳入 true)
+            showFeedback(resultDiv, "正在搜尋資料...", true);
 
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    // 進度與百分比映射
                     const progressMap = {
                         "排單中": 10,
                         "處理中": 25,
@@ -220,28 +213,22 @@
 
                     const progressPercent = progressMap[data.progress] || 10;
 
-                    // 渲染 HTML 結構
                     resultDiv.innerHTML = `
                         <div style="width: 100%; text-align: center;">
                             <p style="margin: 0; color: var(--text-gray); font-size: 0.85rem;">委託項目</p>
                             <div style="font-size: 1.1rem; font-weight: bold; color: var(--main-blue); margin-bottom: 5px;">${data.project}</div>
-                            
                             <div class="status-tag">${data.progress}</div>
-                            
                             <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.05); margin: 20px auto; width: 60%;">
-
                             <div style="margin-bottom: 10px;">
                                 <span style="color: var(--main-blue); font-size: 0.85rem; font-weight: bold;">完成進度：${progressPercent}%</span>
                                 <div class="progress-container">
                                     <div id="myBar" class="progress-bar"></div>
                                 </div>
                             </div>
-
                             <p style="font-size: 11px; color: #999;">最後更新：${new Date(data.lastUpdate).toLocaleDateString()}</p>
                         </div>
                     `;
 
-                    // 觸發淡入與進度條動畫
                     setTimeout(() => {
                         resultDiv.style.opacity = "1";
                         const bar = document.getElementById("myBar");
@@ -249,24 +236,32 @@
                     }, 50);
 
                 } else {
-                    showFeedback(resultDiv, "找不到此編號，請重新確認。");
+                    showFeedback(resultDiv, "❌ 找不到此編號，請重新確認。", false);
                 }
             } catch (error) {
                 console.error("Fetch Error:", error);
-                showFeedback(resultDiv, "連線超時，請檢查網路連線。");
+                showFeedback(resultDiv, "🔌 連線超時，請檢查網路連線。", false);
             }
         }
 
         /**
-         * 輔助函式：顯示提示訊息
-         * @param {HTMLElement} element - 目標容器
-         * @param {string} message - 要顯示的文字
+         * 修改後的輔助函式：支援顯示 Loading 圖示
          */
-        function showFeedback(element, message) {
-            element.innerHTML = `<span style="color: var(--main-blue); font-weight: 500; font-size: 0.95rem;">${message}</span>`;
+        function showFeedback(element, message, isLoading = false) {
+            let content = `<span style="color: var(--main-blue); font-weight: 500; font-size: 0.95rem;">${message}</span>`;
+            
+            if (isLoading) {
+                content = `
+                    <div class="loading-box">
+                        <div class="loader"></div>
+                        ${content}
+                    </div>
+                `;
+            }
+            
+            element.innerHTML = content;
             setTimeout(() => { element.style.opacity = "1"; }, 50);
         }
     </script>
 </body>
-
 </html>
