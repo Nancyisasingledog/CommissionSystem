@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>委託進度查詢系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === 1. 變數與全域設定 === */
+        :root {
+            --main-blue: #62869D;       /* 主色調 */
+            --light-blue: #77B7DF;      /* 按鈕色 */
+            --hover-blue: #3290C3;      /* 懸停色 */
+            --glass-bg: rgba(255, 255, 255, 0.3); /* 毛玻璃背景 */
+            --text-gray: #666;          /* 次要文字 */
+        }
+
+        body {
+            background-image: url('background.jpg'); 
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Montserrat', 'Noto Sans TC', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: 0.5px;
+        }
+
+        /* === 2. 卡片容器樣式 === */
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 2.5rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 85%;
+            max-width: 320px; /* 縮小寬度，讓卡片更精緻 */
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--main-blue);
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        p {
+            color: var(--main-blue);
+            font-weight: 500;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        /* === 3. 表單元素樣式 === */
+        input {
+            width: 85%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            color: var(--main-blue);
+            caret-color: var(--main-blue);
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #7DB9DE;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        input::placeholder {
+            color: rgba(98, 134, 157, 0.5);
+        }
+
+        button {
+            margin-top: 1.2rem;
+            width: 95%;
+            padding: 12px;
+            background-color: var(--light-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--hover-blue);
+            transform: translateY(-2px);
+        }
+
+        /* === 4. 結果顯示區 (關鍵修復) === */
+        #result {
+            display: none; 
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            margin-top: 25px;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .status-tag {
+            display: inline-block;
+            padding: 4px 14px;
+            background-color: var(--main-blue);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .progress-container {
+            width: 100%;             /* 填滿父容器 */
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            height: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;               /* 由 JS 動態控制 */
+            background: linear-gradient(90deg, #A2C2D6, var(--main-blue));
+            transition: width 1s ease-in-out;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>委 託 進 度 查 詢</h2>
+        <p>請輸入您的訂單編號：</p>
+        
+        <input type="text" id="questId" placeholder="請輸入6碼編號：26XXXX">
+        
+        <button onclick="queryStatus()">立 即 查 詢</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        /**
+         * 核心查詢函式
+         */
+        async function queryStatus() {
+            const idInput = document.getElementById('questId').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            // 替換成你的 GAS 部署網址
+            const gasUrl = "https://script.google.com/macros/s/AKfycbyWZ2_SgLohiRTZSeOgW98GvTFUEEYZMbkUY_c5ZJWVO9zPNBCEcNERMaScL5P3I6K9/exec"; 
+            const apiUrl = `${gasUrl}?id=${idInput}`;
+
+            // 1. 重設顯示狀態 (每次點擊都會先隱藏再顯示動畫)
+            resultDiv.style.display = "flex";
+            resultDiv.style.opacity = "0";
+
+            // 2. 攔截空值
+            if (!idInput) {
+                showFeedback(resultDiv, "請輸入編號再查詢！");
+                return;
+            }
+
+            showFeedback(resultDiv, "正在搜尋資料...");
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.status === "success") {
+                    // 進度與百分比映射
+                    const progressMap = {
+                        "排單中": 10,
+                        "處理中": 25,
+                        "草稿": 50,
+                        "精稿": 75,
+                        "完稿": 100
+                    };
+
+                    const progressPercent = progressMap[data.progress] || 10;
+
+                    // 渲染 HTML 結構
+                    resultDiv.innerHTML = `
+                        <div style="width: 100%; text-align: center;">
+                            <p style="margin: 0; color: var(--text-gray); font-size: 0.85rem;">委託項目</p>
+                            <div style="font-size: 1.1rem; font-weight: bold; color: var(--main-blue); margin-bottom: 5px;">${data.project}</div>
+                            
+                            <div class="status-tag">${data.progress}</div>
+                            
+                            <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.05); margin: 20px auto; width: 60%;">
+
+                            <div style="margin-bottom: 10px;">
+                                <span style="color: var(--main-blue); font-size: 0.85rem; font-weight: bold;">完成進度：${progressPercent}%</span>
+                                <div class="progress-container">
+                                    <div id="myBar" class="progress-bar"></div>
+                                </div>
+                            </div>
+
+                            <p style="font-size: 11px; color: #999;">最後更新：${new Date(data.lastUpdate).toLocaleDateString()}</p>
+                        </div>
+                    `;
+
+                    // 觸發淡入與進度條動畫
+                    setTimeout(() => {
+                        resultDiv.style.opacity = "1";
+                        const bar = document.getElementById("myBar");
+                        if (bar) bar.style.width = progressPercent + "%";
+                    }, 50);
+
+                } else {
+                    showFeedback(resultDiv, "找不到此編號，請重新確認。");
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                showFeedback(resultDiv, "連線超時，請檢查網路連線。");
+            }
+        }
+
+        /**
+         * 輔助函式：顯示提示訊息
+         * @param {HTMLElement} element - 目標容器
+         * @param {string} message - 要顯示的文字
+         */
+        function showFeedback(element, message) {
+            element.innerHTML = `<span style="color: var(--main-blue); font-weight: 500; font-size: 0.95rem;">${message}</span>`;
+            setTimeout(() => { element.style.opacity = "1"; }, 50);
+        }
+    </script>
+</body>
+</html>
