@@ -9,11 +9,11 @@
     <style>
         /* === 1. 變數與全域設定 === */
         :root {
-            --main-blue: #62869D;       /* 主色調 */
-            --light-blue: #77B7DF;      /* 按鈕色 */
-            --hover-blue: #3290C3;      /* 懸停色 */
-            --glass-bg: rgba(255, 255, 255, 0.3); /* 毛玻璃背景 */
-            --text-gray: #666;          /* 次要文字 */
+            --main-blue: #62869D;
+            --light-blue: #77B7DF;
+            --hover-blue: #3290C3;
+            --glass-bg: rgba(255, 255, 255, 0.3);
+            --text-gray: #666;
         }
 
         body {
@@ -32,7 +32,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* === 2. 卡片容器樣式 === */
         .container {
             background: var(--glass-bg);
             backdrop-filter: blur(15px);
@@ -46,21 +45,9 @@
             text-align: center;
         }
 
-        h2 {
-            color: var(--main-blue);
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-        }
+        h2 { color: var(--main-blue); margin-bottom: 1.5rem; font-weight: 700; letter-spacing: 2px; }
+        p { color: var(--main-blue); font-weight: 500; margin: 10px 0; line-height: 1.6; }
 
-        p {
-            color: var(--main-blue);
-            font-weight: 500;
-            margin: 10px 0;
-            line-height: 1.6;
-        }
-
-        /* === 3. 表單元素樣式 === */
         input {
             width: 85%;
             padding: 12px 15px;
@@ -68,21 +55,12 @@
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 12px;
             color: var(--main-blue);
-            caret-color: var(--main-blue);
             font-size: 16px;
             text-align: center;
             outline: none;
             transition: all 0.3s ease;
         }
-
-        input:focus {
-            border-color: #7DB9DE;
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        input::placeholder {
-            color: rgba(98, 134, 157, 0.5);
-        }
+        input:focus { border-color: #7DB9DE; background: rgba(255, 255, 255, 0.4); }
 
         button {
             margin-top: 1.2rem;
@@ -97,13 +75,9 @@
             cursor: pointer;
             transition: 0.3s;
         }
+        button:hover { background-color: var(--hover-blue); transform: translateY(-2px); }
+        button:active { transform: scale(0.9); transition: 0.1s; }
 
-        button:hover {
-            background-color: var(--hover-blue);
-            transform: translateY(-2px);
-        }
-
-        /* === 4. 結果顯示與 Loading 動畫 === */
         #result {
             display: none; 
             opacity: 0;
@@ -114,7 +88,6 @@
             align-items: center;
         }
 
-        /* 旋轉圖示本體 */
         .loader {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid var(--main-blue);
@@ -124,18 +97,7 @@
             animation: spin 1s linear infinite;
             margin: 10px auto;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .status-tag {
             display: inline-block;
@@ -158,12 +120,23 @@
         }
 
         .progress-bar {
+            position: relative;
             height: 100%;
             width: 0%;
             background: linear-gradient(90deg, #A2C2D6, var(--main-blue));
             transition: width 1s ease-in-out;
             border-radius: 10px;
         }
+
+        .progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 100% { left: 100%; } }
     </style>
 </head>
 <body>
@@ -171,11 +144,8 @@
     <div class="container">
         <h2>委 託 進 度 查 詢</h2>
         <p>請輸入您的訂單編號：</p>
-        
         <input type="text" id="questId" placeholder="請輸入6碼編號：26XXXX">
-        
         <button onclick="queryStatus()">立 即 查 詢</button>
-
         <div id="result"></div>
     </div>
 
@@ -183,7 +153,6 @@
         async function queryStatus() {
             const idInput = document.getElementById('questId').value.trim();
             const resultDiv = document.getElementById('result');
-            
             const gasUrl = "https://script.google.com/macros/s/AKfycbyWZ2_SgLohiRTZSeOgW98GvTFUEEYZMbkUY_c5ZJWVO9zPNBCEcNERMaScL5P3I6K9/exec"; 
             const apiUrl = `${gasUrl}?id=${idInput}`;
 
@@ -191,11 +160,10 @@
             resultDiv.style.opacity = "0";
 
             if (!idInput) {
-                showFeedback(resultDiv, "⚠️請輸入編號再查詢！", false);
+                showFeedback(resultDiv, "⚠️ 請輸入編號再查詢！", false);
                 return;
             }
 
-            // 開始搜尋，顯示 Loading 動畫 (傳入 true)
             showFeedback(resultDiv, "正在搜尋資料...", true);
 
             try {
@@ -203,14 +171,7 @@
                 const data = await response.json();
 
                 if (data.status === "success") {
-                    const progressMap = {
-                        "排單中": 10,
-                        "處理中": 25,
-                        "草稿": 50,
-                        "精稿": 75,
-                        "完稿": 100
-                    };
-
+                    const progressMap = { "排單中": 10, "處理中": 25, "草稿": 50, "精稿": 75, "完稿": 100 };
                     const progressPercent = progressMap[data.progress] || 10;
 
                     resultDiv.innerHTML = `
@@ -220,7 +181,7 @@
                             <div class="status-tag">${data.progress}</div>
                             <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.05); margin: 20px auto; width: 60%;">
                             <div style="margin-bottom: 10px;">
-                                <span style="color: var(--main-blue); font-size: 0.85rem; font-weight: bold;">完成進度：${progressPercent}%</span>
+                                <span id="progressNumber" style="color: var(--main-blue); font-size: 0.85rem; font-weight: bold;">完成進度：0%</span>
                                 <div class="progress-container">
                                     <div id="myBar" class="progress-bar"></div>
                                 </div>
@@ -232,37 +193,53 @@
                     setTimeout(() => {
                         resultDiv.style.opacity = "1";
                         const bar = document.getElementById("myBar");
+                        const numDisplay = document.getElementById("progressNumber");
+                        
                         if (bar) bar.style.width = progressPercent + "%";
+                        
+                        // 數值跳動動畫邏輯
+                        let currentNum = 0;
+                        const duration = 1000; // 1秒跑完
+                        const startTime = performance.now();
+
+                        function animate(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            currentNum = Math.floor(progress * progressPercent);
+                            
+                            if (numDisplay) numDisplay.innerText = `完成進度：${currentNum}%`;
+
+                            if (progress < 1) {
+                                requestAnimationFrame(animate);
+                            }
+                        }
+                        requestAnimationFrame(animate);
+                        
                     }, 50);
 
                 } else {
-                    showFeedback(resultDiv, "找不到此編號，請重新確認。", false);
+                    showFeedback(resultDiv, "❌ 找不到此編號，請重新確認。", false);
                 }
             } catch (error) {
-                console.error("Fetch Error:", error);
-                showFeedback(resultDiv, "連線超時，請檢查網路連線。", false);
+                showFeedback(resultDiv, "🔌 連線超時，請檢查網路連線。", false);
             }
         }
 
-        /**
-         * 修改後的輔助函式：支援顯示 Loading 圖示
-         */
         function showFeedback(element, message, isLoading = false) {
             let content = `<span style="color: var(--main-blue); font-weight: 500; font-size: 0.95rem;">${message}</span>`;
-            
             if (isLoading) {
-                content = `
-                    <div class="loading-box">
-                        <div class="loader"></div>
-                        ${content}
-                    </div>
-                `;
+                content = `<div class="loading-box"><div class="loader"></div>${content}</div>`;
             }
-            
             element.innerHTML = content;
             setTimeout(() => { element.style.opacity = "1"; }, 50);
         }
+
+        document.getElementById("questId").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                queryStatus();
+            }
+        });
     </script>
 </body>
 </html>
-
