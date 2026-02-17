@@ -191,7 +191,7 @@
             resultDiv.style.opacity = "0";
 
             if (!idInput) {
-                showFeedback(resultDiv, "⚠️ 請輸入編號再查詢！", false);
+                showFeedback(resultDiv, "⚠️請輸入編號再查詢！", false);
                 return;
             }
 
@@ -236,11 +236,11 @@
                     }, 50);
 
                 } else {
-                    showFeedback(resultDiv, "❌ 找不到此編號，請重新確認。", false);
+                    showFeedback(resultDiv, "找不到此編號，請重新確認。", false);
                 }
             } catch (error) {
                 console.error("Fetch Error:", error);
-                showFeedback(resultDiv, "🔌 連線超時，請檢查網路連線。", false);
+                showFeedback(resultDiv, "連線超時，請檢查網路連線。", false);
             }
         }
 
@@ -265,3 +265,4 @@
     </script>
 </body>
 </html>
+
