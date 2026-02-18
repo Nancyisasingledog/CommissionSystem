@@ -227,7 +227,7 @@
          * 渲染成功結果的 HTML
          */
         function renderResult(data, container) {
-            const progressPercent = CONFIG.PROGRESS_MAP[data.progress] || 10;
+            const progressPercent = CONFIG.PROGRESS_MAP[data.progress] ?? 10;
             
             // 判斷是否顯示等待人數或祝賀詞
             const waitingHtml = data.progress !== "完稿" 
@@ -313,4 +313,5 @@
     </script>
 </body>
 </html>
+
 
