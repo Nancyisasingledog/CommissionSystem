@@ -282,7 +282,7 @@
                 const progress = Math.min(elapsed / CONFIG.ANIMATION_DURATION, 1);
                 const currentNum = Math.floor(progress * target);
                 
-                element.innerText = `完成進度：${currentNum}%`;
+                element.innerText = `您的案件完成進度：${currentNum}%`;
 
                 if (progress < 1) {
                     requestAnimationFrame(update);
@@ -313,5 +313,6 @@
     </script>
 </body>
 </html>
+
 
 
